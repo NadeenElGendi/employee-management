@@ -9,44 +9,73 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = `${environment.apiUrl}/Employees`; 
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    })
-  };
+  private apiUrl = `${environment.apiUrl}/Employees`;
 
   constructor(private http: HttpClient) {}
 
   // Get all employees
   getAllEmployees(): Observable<Employee[]> {
-    return this.http.get<Employee[]>(`${this.apiUrl}/getAllEmployees`, this.httpOptions)
-      .pipe(retry(1), catchError(this.handleError));
+    return this.http.get<Employee[]>(`${this.apiUrl}/getAllEmployees`, {
+      headers: new HttpHeaders({
+        'Accept': 'application/json'
+      }),
+      responseType: 'json'
+    }).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
   // Get employee by ID
   getEmployeeById(empId: number): Observable<Employee> {
-    return this.http.get<Employee>(`${this.apiUrl}/getEmpByID/${empId}`, this.httpOptions)
-      .pipe(retry(1), catchError(this.handleError));
+    return this.http.get<Employee>(`${this.apiUrl}/getEmpByID/${empId}`, {
+      headers: new HttpHeaders({
+        'Accept': 'application/json'
+      }),
+      responseType: 'json'
+    }).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
   // Add new employee
   addEmployee(employee: EmployeeViewModel): Observable<any> {
-    return this.http.post(`${this.apiUrl}/addEmployee`, employee, this.httpOptions)
-      .pipe(retry(1), catchError(this.handleError));
+    return this.http.post(`${this.apiUrl}/addEmployee`, employee, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      })
+    }).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
   // Edit employee
   editEmployee(employee: EditEmployeeViewModel): Observable<any> {
-    return this.http.post(`${this.apiUrl}/editEmployee`, employee, this.httpOptions)
-      .pipe(retry(1), catchError(this.handleError));
+    return this.http.post(`${this.apiUrl}/editEmployee`, employee, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      })
+    }).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
   // Delete employee
   deleteEmployee(empId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/deleteEmpByID/${empId}`, this.httpOptions)
-      .pipe(retry(1), catchError(this.handleError));
+    return this.http.get(`${this.apiUrl}/deleteEmpByID/${empId}`, {
+      headers: new HttpHeaders({
+        'Accept': 'application/json'
+      }),
+      responseType: 'json'
+    }).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
   // Error handling
