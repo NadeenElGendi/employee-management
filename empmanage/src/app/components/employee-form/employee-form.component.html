@@ -1,0 +1,108 @@
+<div class="employee-form">
+  <!-- Header -->
+  <div class="form-header">
+    <h2 class="form-title">{{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}</h2>
+    <p class="form-subtitle">
+      {{ isEditMode ? 'Update employee information' : 'Fill in the employee details below' }}
+    </p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" class="form">
+    <!-- Employee Name -->
+    <div class="form-group">
+      <label for="empName" class="form-label">
+        Employee Name <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        id="empName"
+        formControlName="empName"
+        class="form-control"
+        [class.error]="isFieldInvalid('empName')"
+        placeholder="Enter employee name"
+      >
+      <div *ngIf="isFieldInvalid('empName')" class="error-message" [class.duplicate-error]="hasDuplicateError('empName')">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ getErrorMessage('empName') }}
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="form-group">
+      <label for="empEmail" class="form-label">
+        Email Address <span class="required">*</span>
+      </label>
+      <input
+        type="email"
+        id="empEmail"
+        formControlName="empEmail"
+        class="form-control"
+        [class.error]="isFieldInvalid('empEmail')"
+        placeholder="Enter email address"
+      >
+      <div *ngIf="isFieldInvalid('empEmail')" class="error-message" [class.duplicate-error]="hasDuplicateError('empEmail')">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ getErrorMessage('empEmail') }}
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="form-group">
+      <label for="empAddress" class="form-label">
+        Address <span class="required">*</span>
+      </label>
+      <textarea
+        id="empAddress"
+        formControlName="empAddress"
+        class="form-control"
+        [class.error]="isFieldInvalid('empAddress')"
+        placeholder="Enter address"
+        rows="3"
+      ></textarea>
+      <div *ngIf="isFieldInvalid('empAddress')" class="error-message" [class.duplicate-error]="hasDuplicateError('empAddress')">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ getErrorMessage('empAddress') }}
+      </div>
+    </div>
+
+    <!-- Phone -->
+    <div class="form-group">
+      <label for="empPhone" class="form-label">
+        Phone Number <span class="required">*</span>
+      </label>
+      <input
+        type="tel"
+        id="empPhone"
+        formControlName="empPhone"
+        class="form-control"
+        [class.error]="isFieldInvalid('empPhone')"
+        placeholder="Enter phone number"
+      >
+      <div *ngIf="isFieldInvalid('empPhone')" class="error-message" [class.duplicate-error]="hasDuplicateError('empPhone')">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ getErrorMessage('empPhone') }}
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        (click)="onCancel()"
+        class="btn btn-secondary"
+      >
+        <i class="fas fa-times"></i>
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="employeeForm.invalid || hasAnyDuplicateErrors()"
+        class="btn btn-primary"
+      >
+        <i class="fas fa-check"></i>
+        {{ isEditMode ? 'Update Employee' : 'Add Employee' }}
+      </button>
+    </div>
+  </form>
+</div> 
