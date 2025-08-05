@@ -3,12 +3,13 @@ import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { Employee, EmployeeViewModel, EditEmployeeViewModel } from '../models/employee.model';
+import { environment } from '../../../src/environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = '/api/Employees'; 
+  private apiUrl = `${environment.apiUrl}/Employees`; 
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
