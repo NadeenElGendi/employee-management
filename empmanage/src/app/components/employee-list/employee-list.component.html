@@ -1,0 +1,236 @@
+<div class="employee-list-container">
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="main-title">Employee Management System</h1>
+        </div>
+        <button *ngIf="!showForm" (click)="addEmployee()" class="btn add-btn">
+          <i class="fas fa-plus"></i>
+          Add New Employee
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+      <div class="error-content">
+        <div class="error-icon">
+          <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="error-text">
+          <p>{{ error }}</p>
+        </div>
+        <button (click)="error = ''" class="error-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading employees...</p>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!loading && !showForm" class="content">
+      <!-- Search and Filter Section -->
+      <div class="search-filter-section">
+        <div class="search-filter-content">
+          <!-- Search Box -->
+          <div class="search-box">
+            <div class="search-input-container">
+              <i class="fas fa-search search-icon"></i>
+              <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                placeholder="Search employees by name, email, address, phone, or ID..." class="search-input">
+              <button *ngIf="searchTerm" (click)="clearSearch()" class="clear-search-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sort Filter -->
+          <div class="sort-filter">
+            <label for="sortOrder" class="sort-label">sort by:</label>
+            <select id="sortOrder" [(ngModel)]="sortOrder" (ngModelChange)="onSortChange()" class="sort-select">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Search Results Info -->
+        <div *ngIf="searchTerm || sortOrder !== 'newest'" class="search-results-info">
+          <span class="results-count">
+            {{ filteredEmployees.length }} of {{ employees.length }} employees
+          </span>
+          <button *ngIf="searchTerm || sortOrder !== 'newest'" (click)="clearSearch(); sortOrder = 'newest'"
+            class="clear-filters-btn">
+            Clear all filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Employee Count -->
+      <div *ngIf="filteredEmployees.length > 0" class="employee-count-card">
+        <div class="count-content">
+          <div class="count-info">
+            <h2 class="count-title">Total Employees: {{ filteredEmployees.length }}</h2>
+          </div>
+          <div class="count-badge">
+            <i class="fas fa-users badge-icon"></i>
+            <span>{{ filteredEmployees.length }} Employee{{ filteredEmployees.length !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Employees -->
+      <div *ngIf="filteredEmployees.length === 0 && !searchTerm" class="no-employees">
+        <i class="fas fa-users no-employees-icon"></i>
+        <h3>No employees</h3>
+        <p>Get started by creating a new employee.</p>
+        <button (click)="addEmployee()" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          Add Employee
+        </button>
+      </div>
+
+      <!-- No Search Results -->
+      <div *ngIf="filteredEmployees.length === 0 && searchTerm" class="no-search-results">
+        <i class="fas fa-search no-results-icon"></i>
+        <h3>No results found</h3>
+        <p>No employees match your search criteria "{{ searchTerm }}".</p>
+        <button (click)="clearSearch()" class="btn btn-secondary">
+          <i class="fas fa-times"></i>
+          Clear search
+        </button>
+      </div>
+
+      <!-- Employee Table -->
+      <div *ngIf="filteredEmployees.length > 0" class="table-container">
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let employee of paginatedEmployees" class="table-row">
+                <td class="employee-id">#{{ employee.empId }}</td>
+                <td class="employee-name">
+                  <div class="name-container">
+                    <div class="avatar">
+                      <span>{{ employee.empName.charAt(0).toUpperCase() }}</span>
+                    </div>
+                    <div class="name-text">
+                      <div class="name">{{ employee.empName }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="employee-email">{{ employee.empEmail }}</td>
+                <td class="employee-address">{{ employee.empAddress }}</td>
+                <td class="employee-phone">{{ employee.empPhone }}</td>
+                <td class="employee-actions">
+                  <div class="actions-container">
+                    <button (click)="editEmployee(employee)" class="btn btn-sm btn-warning">
+                      <i class="fas fa-edit"></i>
+                      Edit
+                    </button>
+                    <button (click)="deleteEmployee(employee)" class="btn btn-sm btn-danger">
+                      <i class="fas fa-trash"></i>
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination & Info under the table, centered -->
+        <div *ngIf="totalPages > 1" class="pagination-container" style="margin-top: 1rem;">
+          <div class="pagination-content" style="flex-direction: column; align-items: center;">
+            <div class="pagination-info" style="text-align: center; margin-bottom: 0.5rem;">
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage,
+              filteredEmployees.length) }} of {{ filteredEmployees.length }} employees
+            </div>
+            <div class="pagination-controls">
+              <button [disabled]="currentPage === 1" (click)="previousPage()" class="btn btn-secondary pagination-btn">
+                <i class="fas fa-chevron-left"></i>
+                Previous
+              </button>
+
+              <!-- Page Numbers -->
+              <div class="page-numbers">
+                <button *ngFor="let page of getPageNumbers()" (click)="goToPage(page)"
+                  [class]="page === currentPage ? 'btn btn-primary page-btn active' : 'btn btn-secondary page-btn'">
+                  {{ page }}
+                </button>
+              </div>
+
+              <!-- Next Button -->
+              <button [disabled]="currentPage === totalPages" (click)="nextPage()"
+                class="btn btn-secondary pagination-btn">
+                Next
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Overlay خارج الـ content -->
+    <div *ngIf="showForm" class="form-overlay">
+      <div class="form-container">
+        <app-employee-form [employee]="editingEmployee" [isEditMode]="isEditMode" [existingEmployees]="employees"
+          (saveEmployee)="onSaveEmployee($event)" (cancel)="onCancelForm()"></app-employee-form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Popup -->
+    <div *ngIf="showDeletePopup" class="delete-popup-overlay" (click)="closeDeletePopup()">
+      <div class="delete-popup-container" (click)="$event.stopPropagation()">
+        <div class="delete-popup-content">
+          <!-- Header -->
+          <div class="delete-popup-header">
+            <div class="delete-popup-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="delete-popup-title">Delete Employee</h3>
+          </div>
+
+          <!-- Body -->
+          <div class="delete-popup-body">
+            <p class="delete-popup-message">
+              Are you sure you want to delete <strong>{{ employeeToDelete?.empName }}</strong>?
+            </p>
+            <p class="delete-popup-warning">
+              This action cannot be undone. All employee data will be permanently removed.
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="delete-popup-actions">
+            <button (click)="closeDeletePopup()" class="btn btn-secondary">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
+            <button (click)="confirmDelete()" class="btn btn-danger">
+              <i class="fas fa-trash"></i>
+              Delete Employee
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
