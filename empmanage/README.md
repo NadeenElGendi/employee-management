@@ -25,7 +25,6 @@ The application integrates with the following API endpoints:
 
 - **Angular 19**: Latest version with standalone components
 - **TypeScript**: Type-safe development
-- **RxJS**: Reactive programming
 - **Angular Forms**: Reactive forms with validation
 - **Font Awesome**: Icons
 - **SCSS**: Advanced styling
