@@ -89,7 +89,7 @@
       <!-- No Employees -->
       <div *ngIf="filteredEmployees.length === 0 && !searchTerm" class="no-employees">
         <i class="fas fa-users no-employees-icon"></i>
-        <h3>No employees</h3>
+        <h3>No employees found</h3>
         <p>Get started by creating a new employee.</p>
         <button (click)="addEmployee()" class="btn btn-primary">
           <i class="fas fa-plus"></i>
@@ -110,20 +110,78 @@
 
       <!-- Employee Table -->
       <div *ngIf="filteredEmployees.length > 0" class="table-container">
+        <!-- Selection Info -->
+        <div *ngIf="selectedEmployees.length > 0" class="selection-info">
+          <span class="selection-count">
+            {{ getSelectedCount() }} employee{{ getSelectedCount() !== 1 ? 's' : '' }} selected
+          </span>
+          <button (click)="clearSelection()" class="btn btn-sm btn-secondary">
+            <i class="fas fa-times"></i>
+            Clear Selection
+          </button>
+        </div>
+        
         <div class="table-wrapper">
           <table class="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Address</th>
-                <th>Phone</th>
+                <th>
+                  <input type="checkbox" [(ngModel)]="allSelected" (change)="toggleSelectAll()" />
+                </th>
+                <th (click)="sortBy('empId')" [class.sorted]="sortColumn === 'empId'" class="sortable-header">
+                  ID
+                  <span *ngIf="sortColumn === 'empId'">
+                    <i [class]="sortDirection === 'asc' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                  </span>
+                  <span *ngIf="sortColumn !== 'empId'" class="sort-icon">
+                    <i class="fas fa-sort"></i>
+                  </span>
+                </th>
+                <th (click)="sortBy('empName')" [class.sorted]="sortColumn === 'empName'" class="sortable-header">
+                  Name
+                  <span *ngIf="sortColumn === 'empName'">
+                    <i [class]="sortDirection === 'asc' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                  </span>
+                  <span *ngIf="sortColumn !== 'empName'" class="sort-icon">
+                    <i class="fas fa-sort"></i>
+                  </span>
+                </th>
+                <th (click)="sortBy('empEmail')" [class.sorted]="sortColumn === 'empEmail'" class="sortable-header">
+                  Email
+                  <span *ngIf="sortColumn === 'empEmail'">
+                    <i [class]="sortDirection === 'asc' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                  </span>
+                  <span *ngIf="sortColumn !== 'empEmail'" class="sort-icon">
+                    <i class="fas fa-sort"></i>
+                  </span>
+                </th>
+                <th (click)="sortBy('empAddress')" [class.sorted]="sortColumn === 'empAddress'" class="sortable-header">
+                  Address
+                  <span *ngIf="sortColumn === 'empAddress'">
+                    <i [class]="sortDirection === 'asc' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                  </span>
+                  <span *ngIf="sortColumn !== 'empAddress'" class="sort-icon">
+                    <i class="fas fa-sort"></i>
+                  </span>
+                </th>
+                <th (click)="sortBy('empPhone')" [class.sorted]="sortColumn === 'empPhone'" class="sortable-header">
+                  Phone
+                  <span *ngIf="sortColumn === 'empPhone'">
+                    <i [class]="sortDirection === 'asc' ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+                  </span>
+                  <span *ngIf="sortColumn !== 'empPhone'" class="sort-icon">
+                    <i class="fas fa-sort"></i>
+                  </span>
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let employee of paginatedEmployees" class="table-row">
+                <td>
+                  <input type="checkbox" [checked]="selectedEmployees.includes(employee.empId!)"
+                    (change)="toggleSelectEmployee(employee.empId!)" />
+                </td>
                 <td class="employee-id">#{{ employee.empId }}</td>
                 <td class="employee-name">
                   <div class="name-container">
@@ -191,8 +249,14 @@
     <!-- Form Overlay خارج الـ content -->
     <div *ngIf="showForm" class="form-overlay">
       <div class="form-container">
-        <app-employee-form [employee]="editingEmployee" [isEditMode]="isEditMode" [existingEmployees]="employees"
-          (saveEmployee)="onSaveEmployee($event)" (cancel)="onCancelForm()"></app-employee-form>
+        <app-employee-form 
+          [employee]="editingEmployee" 
+          [isEditMode]="isEditMode" 
+          [existingEmployees]="employees"
+          [isSaving]="isSaving"
+          (saveEmployee)="onSaveEmployee($event)" 
+          (cancel)="onCancelForm()">
+        </app-employee-form>
       </div>
     </div>
 

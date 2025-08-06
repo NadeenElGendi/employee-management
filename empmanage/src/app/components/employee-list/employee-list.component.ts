@@ -2,7 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EmployeeService } from '../../services/employee.service';
-import { Employee, EmployeeViewModel, EditEmployeeViewModel } from '../../models/employee.model';
+import {
+  Employee,
+  EmployeeViewModel,
+  EditEmployeeViewModel,
+} from '../../models/employee.model';
 import { EmployeeFormComponent } from '../employee-form/employee-form.component';
 
 @Component({
@@ -10,7 +14,7 @@ import { EmployeeFormComponent } from '../employee-form/employee-form.component'
   standalone: true,
   imports: [CommonModule, FormsModule, EmployeeFormComponent],
   templateUrl: './employee-list.component.html',
-  styleUrl: './employee-list.component.scss'
+  styleUrl: './employee-list.component.scss',
 })
 export class EmployeeListComponent implements OnInit {
   employees: Employee[] = [];
@@ -27,13 +31,24 @@ export class EmployeeListComponent implements OnInit {
 
   // Pagination properties
   currentPage = 1;
-  itemsPerPage = 6;
+  itemsPerPage = 10;
   totalPages = 0;
   paginatedEmployees: Employee[] = [];
 
   // Delete popup properties
   showDeletePopup = false;
   employeeToDelete: Employee | null = null;
+
+  // Sort properties
+  sortColumn: keyof Employee | '' = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  // Select properties
+  allSelected: boolean = false;
+  selectedEmployees: number[] = [];
+
+  // Save loading state
+  isSaving = false;
 
   // Math functions for template
   Math = Math;
@@ -42,7 +57,7 @@ export class EmployeeListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadEmployees();
-    
+
     // Add keyboard listener for ESC key only in browser
     if (typeof document !== 'undefined') {
       document.addEventListener('keydown', this.handleKeydown.bind(this));
@@ -65,7 +80,7 @@ export class EmployeeListComponent implements OnInit {
   loadEmployees(): void {
     this.loading = true;
     this.error = '';
-    
+
     this.employeeService.getAllEmployees().subscribe({
       next: (data) => {
         this.employees = data;
@@ -76,38 +91,46 @@ export class EmployeeListComponent implements OnInit {
         this.error = 'Failed to load employees. Please try again.';
         this.loading = false;
         console.error('Error loading employees:', error);
-      }
+      },
     });
   }
 
   // Check for duplicate data
-  checkForDuplicates(employeeData: EmployeeViewModel | EditEmployeeViewModel): { isDuplicate: boolean; duplicateFields: string[] } {
+  checkForDuplicates(employeeData: EmployeeViewModel | EditEmployeeViewModel): {
+    isDuplicate: boolean;
+    duplicateFields: string[];
+  } {
     const duplicateFields: string[] = [];
     const isEditMode = 'empId' in employeeData;
-    const currentEmployeeId = isEditMode ? (employeeData as EditEmployeeViewModel).empId : null;
+    const currentEmployeeId = isEditMode
+      ? (employeeData as EditEmployeeViewModel).empId
+      : null;
 
     // Check email duplicates
-    const emailExists = this.employees.some(emp => 
-      emp.empEmail.toLowerCase() === employeeData.empEmail.toLowerCase() && 
-      (!isEditMode || emp.empId !== currentEmployeeId)
+    const emailExists = this.employees.some(
+      (emp) =>
+        emp.empEmail.toLowerCase() === employeeData.empEmail.toLowerCase() &&
+        (!isEditMode || emp.empId !== currentEmployeeId)
     );
     if (emailExists) {
       duplicateFields.push('Email');
     }
 
     // Check phone duplicates
-    const phoneExists = this.employees.some(emp => 
-      emp.empPhone === employeeData.empPhone && 
-      (!isEditMode || emp.empId !== currentEmployeeId)
+    const phoneExists = this.employees.some(
+      (emp) =>
+        emp.empPhone === employeeData.empPhone &&
+        (!isEditMode || emp.empId !== currentEmployeeId)
     );
     if (phoneExists) {
       duplicateFields.push('Phone');
     }
 
     // Check name duplicates (optional - you can remove this if names can be duplicated)
-    const nameExists = this.employees.some(emp => 
-      emp.empName.toLowerCase() === employeeData.empName.toLowerCase() && 
-      (!isEditMode || emp.empId !== currentEmployeeId)
+    const nameExists = this.employees.some(
+      (emp) =>
+        emp.empName.toLowerCase() === employeeData.empName.toLowerCase() &&
+        (!isEditMode || emp.empId !== currentEmployeeId)
     );
     if (nameExists) {
       duplicateFields.push('Name');
@@ -115,7 +138,7 @@ export class EmployeeListComponent implements OnInit {
 
     return {
       isDuplicate: duplicateFields.length > 0,
-      duplicateFields
+      duplicateFields,
     };
   }
 
@@ -126,12 +149,13 @@ export class EmployeeListComponent implements OnInit {
     // Apply search filter
     if (this.searchTerm.trim()) {
       const searchLower = this.searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(employee => 
-        employee.empName.toLowerCase().includes(searchLower) ||
-        employee.empEmail.toLowerCase().includes(searchLower) ||
-        employee.empAddress.toLowerCase().includes(searchLower) ||
-        employee.empPhone.toLowerCase().includes(searchLower) ||
-        employee.empId?.toString().includes(searchLower)
+      filtered = filtered.filter(
+        (employee) =>
+          employee.empName.toLowerCase().includes(searchLower) ||
+          employee.empEmail.toLowerCase().includes(searchLower) ||
+          employee.empAddress.toLowerCase().includes(searchLower) ||
+          employee.empPhone.toLowerCase().includes(searchLower) ||
+          employee.empId?.toString().includes(searchLower)
       );
     }
 
@@ -163,7 +187,9 @@ export class EmployeeListComponent implements OnInit {
   }
 
   calculatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredEmployees.length / this.itemsPerPage);
+    this.totalPages = Math.ceil(
+      this.filteredEmployees.length / this.itemsPerPage
+    );
     this.currentPage = Math.min(this.currentPage, this.totalPages);
     this.currentPage = Math.max(1, this.currentPage);
     this.updatePaginatedEmployees();
@@ -172,7 +198,10 @@ export class EmployeeListComponent implements OnInit {
   updatePaginatedEmployees(): void {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedEmployees = this.filteredEmployees.slice(startIndex, endIndex);
+    this.paginatedEmployees = this.filteredEmployees.slice(
+      startIndex,
+      endIndex
+    );
   }
 
   goToPage(page: number): void {
@@ -197,24 +226,27 @@ export class EmployeeListComponent implements OnInit {
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;
-    
+
     if (this.totalPages <= maxVisiblePages) {
       for (let i = 1; i <= this.totalPages; i++) {
         pages.push(i);
       }
     } else {
-      let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let startPage = Math.max(
+        1,
+        this.currentPage - Math.floor(maxVisiblePages / 2)
+      );
       let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-      
+
       if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1);
       }
-      
+
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   }
 
@@ -240,7 +272,7 @@ export class EmployeeListComponent implements OnInit {
       const empId = this.employeeToDelete.empId!;
       this.employeeService.deleteEmployee(empId).subscribe({
         next: () => {
-          this.employees = this.employees.filter(emp => emp.empId !== empId);
+          this.employees = this.employees.filter((emp) => emp.empId !== empId);
           this.applyFilters();
           this.closeDeletePopup();
         },
@@ -248,7 +280,7 @@ export class EmployeeListComponent implements OnInit {
           this.error = 'Failed to delete employee. Please try again.';
           console.error('Error deleting employee:', error);
           this.closeDeletePopup();
-        }
+        },
       });
     }
   }
@@ -258,7 +290,12 @@ export class EmployeeListComponent implements OnInit {
     this.employeeToDelete = null;
   }
 
-  onSaveEmployee(employeeData: EmployeeViewModel | EditEmployeeViewModel): void {
+  onSaveEmployee(
+    employeeData: EmployeeViewModel | EditEmployeeViewModel
+  ): void {
+    this.isSaving = true;
+    this.error = '';
+
     if (this.isEditMode) {
       const editData = employeeData as EditEmployeeViewModel;
       this.employeeService.editEmployee(editData).subscribe({
@@ -267,12 +304,13 @@ export class EmployeeListComponent implements OnInit {
           this.showForm = false;
           this.editingEmployee = null;
           this.isEditMode = false;
-          this.error = ''; // Clear any previous errors
+          this.isSaving = false;
         },
         error: (error) => {
           this.error = 'Failed to update employee. Please try again.';
           console.error('Error updating employee:', error);
-        }
+          this.isSaving = false;
+        },
       });
     } else {
       const newData = employeeData as EmployeeViewModel;
@@ -280,12 +318,13 @@ export class EmployeeListComponent implements OnInit {
         next: () => {
           this.loadEmployees();
           this.showForm = false;
-          this.error = ''; // Clear any previous errors
+          this.isSaving = false;
         },
         error: (error) => {
           this.error = 'Failed to add employee. Please try again.';
           console.error('Error adding employee:', error);
-        }
+          this.isSaving = false;
+        },
       });
     }
   }
@@ -294,6 +333,70 @@ export class EmployeeListComponent implements OnInit {
     this.showForm = false;
     this.editingEmployee = null;
     this.isEditMode = false;
+    this.isSaving = false;
     this.error = ''; // Clear any previous errors
+  }
+
+  sortBy(column: keyof Employee) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySorting();
+  }
+
+  applySorting() {
+    if (!this.sortColumn) return;
+    this.filteredEmployees.sort((a, b) => {
+      const valA = a[this.sortColumn as keyof Employee];
+      const valB = b[this.sortColumn as keyof Employee];
+      let compareA = typeof valA === 'string' ? valA.toLowerCase() : valA;
+      let compareB = typeof valB === 'string' ? valB.toLowerCase() : valB;
+      // Provide default values if undefined
+      if (compareA === undefined) compareA = '';
+      if (compareB === undefined) compareB = '';
+      if (compareA < compareB) return this.sortDirection === 'asc' ? -1 : 1;
+      if (compareA > compareB) return this.sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    this.calculatePagination();
+  }
+
+  paginateEmployees(): void {
+    this.calculatePagination();
+  }
+
+  toggleSelectAll() {
+    this.allSelected = !this.allSelected;
+    if (this.allSelected) {
+      this.selectedEmployees = this.paginatedEmployees.map((emp) => emp.empId!);
+    } else {
+      this.selectedEmployees = [];
+    }
+  }
+
+  toggleSelectEmployee(empId: number) {
+    if (this.selectedEmployees.includes(empId)) {
+      this.selectedEmployees = this.selectedEmployees.filter(
+        (id) => id !== empId
+      );
+    } else {
+      this.selectedEmployees.push(empId);
+    }
+    // Update allSelected based on current selection
+    this.allSelected =
+      this.selectedEmployees.length === this.paginatedEmployees.length && 
+      this.paginatedEmployees.length > 0;
+  }
+
+  getSelectedCount(): number {
+    return this.selectedEmployees.length;
+  }
+
+  clearSelection(): void {
+    this.selectedEmployees = [];
+    this.allSelected = false;
   }
 }
