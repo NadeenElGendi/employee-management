@@ -97,11 +97,12 @@
       </button>
       <button
         type="submit"
-        [disabled]="employeeForm.invalid || hasAnyDuplicateErrors()"
+        [disabled]="employeeForm.invalid || hasAnyDuplicateErrors() || isSaving"
         class="btn btn-primary"
       >
-        <i class="fas fa-check"></i>
-        {{ isEditMode ? 'Update Employee' : 'Add Employee' }}
+        <i *ngIf="!isSaving" class="fas fa-check"></i>
+        <i *ngIf="isSaving" class="fas fa-spinner fa-spin"></i>
+        {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Employee' : 'Add Employee') }}
       </button>
     </div>
   </form>
